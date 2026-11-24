@@ -3,12 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar: pre-token protocols ranked by implied value</title>
+<title>Launch Radar — pre-token protocols ranked by implied value</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<a class="skip" href="#board">Skip to the board</a>
-<main id="board" tabindex="-1" aria-busy="true"></main>
+<header class="masthead">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2" opacity="0.35"/>
+      <circle cx="24" cy="24" r="13.5" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55"/>
+      <circle cx="24" cy="24" r="6" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"/>
+      <path d="M24 24 L41 10" stroke="currentColor" stroke-width="2.5"/>
+      <circle cx="33" cy="30" r="3" fill="currentColor"/>
+      <circle cx="16" cy="15" r="2.2" fill="currentColor" opacity="0.7"/>
+    </svg>
+    <div>
+      <h1>Launch Radar</h1>
+      <p class="tagline">Protocols that record no token yet, ranked by what a launch would be worth — and how to farm each one before it happens.</p>
+    </div>
+  </div>
+  <p class="freshness" id="freshness">Reading the sealed snapshot…</p>
+</header>
+
+<nav class="tabs" aria-label="Views">
+  <a href="#/" data-tab="board">The board</a>
+  <a href="#/live" data-tab="live">Already trading</a>
+</nav>
+
+<main id="view" tabindex="-1" aria-busy="true">
+  <p class="loading">Sweeping the snapshot…</p>
+</main>
+
+<footer class="colophon">
+  <p><strong>How to read this board.</strong> A protocol “records no token” when the snapshot carries no market cap, no CoinGecko id and no symbol for it — a statement about the record, not proof that no token exists anywhere. An implied value is this radar’s own claim, built from the snapshot’s figures alone; it is not a prediction that a token will be issued, or when. The method is written out in full above the board, and every row’s detail view shows its own arithmetic.</p>
+  <p class="fine">Data: a sealed DefiLlama snapshot, fetched once and never updated under the reader. The page runs with no network; every byte it shows ships beside it.</p>
+</footer>
+
 <script src="../data.js"></script>
 <script src="app.js"></script>
 </body>
