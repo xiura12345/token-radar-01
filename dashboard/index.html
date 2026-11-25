@@ -1,45 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Launch Radar — pre-token protocols ranked by implied value</title>
-<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="radar.css">
 </head>
 <body>
-<header class="masthead">
+<header class="top">
   <div class="brand">
-    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
-      <circle cx="24" cy="24" r="21" fill="none" stroke="currentColor" stroke-width="2" opacity="0.35"/>
-      <circle cx="24" cy="24" r="13.5" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55"/>
-      <circle cx="24" cy="24" r="6" fill="none" stroke="currentColor" stroke-width="2" opacity="0.8"/>
-      <path d="M24 24 L41 10" stroke="currentColor" stroke-width="2.5"/>
-      <circle cx="33" cy="30" r="3" fill="currentColor"/>
-      <circle cx="16" cy="15" r="2.2" fill="currentColor" opacity="0.7"/>
-    </svg>
+    <div class="logo">LR</div>
     <div>
       <h1>Launch Radar</h1>
-      <p class="tagline">Protocols that record no token yet, ranked by what a launch would be worth — and how to farm each one before it happens.</p>
+      <p class="tag">Every protocol that records no token yet, ranked by what its token would be worth if its record stayed as it is — and how to farm each one before it launches.</p>
     </div>
   </div>
-  <p class="freshness" id="freshness">Reading the sealed snapshot…</p>
+  <div class="stats" id="stats"></div>
 </header>
 
-<nav class="tabs" aria-label="Views">
-  <a href="#/" data-tab="board">The board</a>
-  <a href="#/live" data-tab="live">Already trading</a>
+<nav class="tabs">
+  <button class="tab active" data-tab="board">Board</button>
+  <button class="tab" data-tab="method">Methodology</button>
+  <button class="tab" data-tab="live">Already trading</button>
 </nav>
 
-<main id="view" tabindex="-1" aria-busy="true">
-  <p class="loading">Sweeping the snapshot…</p>
+<main>
+  <section id="view-board">
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search name or slug…">
+      <select id="f-cat"><option value="">All categories</option></select>
+      <select id="f-chain"><option value="">All chains</option></select>
+      <select id="f-risk"><option value="">Any risk</option><option>Low</option><option>Medium</option><option>High</option></select>
+      <label class="check"><input type="checkbox" id="f-watch"> Watchlist only ★</label>
+      <span class="count" id="count"></span>
+    </div>
+    <table id="board-table">
+      <thead>
+        <tr>
+          <th data-sort="rank">#</th>
+          <th data-sort="name">Protocol</th>
+          <th data-sort="category">Category</th>
+          <th>Chains</th>
+          <th data-sort="tvl" class="num">TVL</th>
+          <th data-sort="chg" class="num">7d %</th>
+          <th data-sort="age" class="num">Age</th>
+          <th data-sort="implied" class="num">Implied value</th>
+          <th data-sort="risk">Risk</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="hint">Click a row for the protocol’s factor breakdown, risk flags and six-step farm plan. Click a column heading to sort.</p>
+  </section>
+
+  <section id="view-detail" hidden></section>
+
+  <section id="view-method" hidden>
+    <div class="prose">
+      <h2>How the board is built</h2>
+      <p>The board holds <strong>every protocol in the snapshot that records no token</strong> — no gecko id, no symbol. The house watchlist (TVL at or above the floor, no token, not a wrapped or staked product of a token that trades) is marked with a ★; it is the floor of the board, never its ceiling, so protocols below the floor are ranked beside it. Protocols whose token already trades are not ranked here at all: they sit under <em>Already trading</em>, where they do the measuring.</p>
+      <h3>The value model</h3>
+      <p>For each pre-token protocol, the implied value of its future token is</p>
+      <p class="formula">implied = TVL × category multiple × momentum × maturity × reach</p>
+      <ul>
+        <li><strong>Category multiple</strong> — the median market-cap/TVL ratio of the snapshot’s own token-bearing protocols in the same category. Ratios are winsorised to [0.005, 10] so one mispriced token cannot bend a category, shrunk toward the global median with a prior weight of 4 samples, and clamped to [0.03, 4]. A category with no token-bearing sample uses the global median. Nothing is hardcoded: change the snapshot and every multiple moves.</li>
+        <li><strong>Momentum</strong> — 1 + 0.35 · tanh(change<sub>7d</sub> / 20). Seven-day TVL growth marks a protocol up by up to a third; a fall marks it down the same way. No reported change is neutral.</li>
+        <li><strong>Maturity</strong> — 1 + 0.5 · (1 − e<sup>−age/540</sup>), age being the days since DefiLlama began tracking the protocol. The longer a protocol has run at size with no token, the more product stands behind the eventual launch. No listing date is neutral.</li>
+        <li><strong>Reach</strong> — 1 + 0.16 · ln(chains), capped at +45%. A protocol already live on many chains gives a token more surface to be useful on.</li>
+      </ul>
+      <h3>Risk flags</h3>
+      <p>Each row carries the flags its own figures earn: TVL down 15% or more in a week, momentum overheated at +40% or more, single-chain exposure, a crowded category (25 or more pre-token rivals), a young protocol (tracked under 180 days), or data the snapshot does not report (no 7-day change, no listing date). Flags add up to a Low / Medium / High label — a falling TVL counts double.</p>
+      <h3>Farm plans</h3>
+      <p>Every row’s plan is six steps written from a playbook for its category, filled with the protocol’s own chains: set up and fund the wallet, deploy a position sized to the protocol’s TVL, work it weekly, expand, track eligibility, and be ready on launch day — each step with what it costs in gas on that chain and how long it takes.</p>
+      <h3>Measured multiples</h3>
+      <p>The multiples below are measured from this snapshot, not asserted. <span id="global-mult"></span></p>
+      <table id="mult-table">
+        <thead><tr><th>Category</th><th class="num">Token-bearing sample</th><th class="num">Multiple used (× TVL)</th></tr></thead>
+        <tbody id="mult-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="view-live" hidden>
+    <p class="hint">These protocols already have a token that trades. They are not ranked — they are the yardstick: the board’s category multiples are the median market-cap/TVL ratios of this set.</p>
+    <table id="live-table">
+      <thead><tr><th>Protocol</th><th>Symbol</th><th>Category</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">Cap / TVL</th></tr></thead>
+      <tbody id="live-rows"></tbody>
+    </table>
+  </section>
 </main>
 
-<footer class="colophon">
-  <p><strong>How to read this board.</strong> A protocol “records no token” when the snapshot carries no market cap, no CoinGecko id and no symbol for it — a statement about the record, not proof that no token exists anywhere. An implied value is this radar’s own claim, built from the snapshot’s figures alone; it is not a prediction that a token will be issued, or when. The method is written out in full above the board, and every row’s detail view shows its own arithmetic.</p>
-  <p class="fine">Data: a sealed DefiLlama snapshot, fetched once and never updated under the reader. The page runs with no network; every byte it shows ships beside it.</p>
+<footer>
+  <span id="foot-note"></span>
+  <span>Implied values are this board’s own model output, not a prediction that a token will be issued or what it will trade at.</span>
 </footer>
 
 <script src="../data.js"></script>
-<script src="app.js"></script>
+<script src="radar.js"></script>
 </body>
 </html>
